@@ -17,7 +17,7 @@ import java.util.List;
  */
 public final class Store {
 
-    private static final String FILE = "socontatos";
+    private static final String FILE = "privatephone";
     private static final String KEY_ENABLED = "blocking_enabled";
     private static final String KEY_SKIP_CALL_LOG = "skip_call_log";
     private static final String KEY_LOG = "log";

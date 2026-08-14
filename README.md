@@ -1,4 +1,4 @@
-# Só Contatos
+# PrivatePhone
 
 App Android minimalista que **só deixa passar ligações de quem está na sua agenda**. Todo o resto é recusado antes de o telefone tocar — sem toque, sem vibração, sem notificação.
 

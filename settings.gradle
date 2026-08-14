@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SoContatos"
+rootProject.name = "PrivatePhone"
 include ":app"
