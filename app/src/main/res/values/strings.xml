@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Só Contatos</string>
+
+    <string name="status_active">Proteção ativa</string>
+    <string name="status_active_detail">Só quem está na sua agenda consegue te ligar. Todo o resto é recusado sem tocar.</string>
+
+    <string name="status_paused">Filtro pausado</string>
+    <string name="status_paused_detail">O app está no comando das chamadas, mas o bloqueio está desligado. Todo mundo consegue ligar.</string>
+
+    <string name="status_partial">Falta a permissão de contatos</string>
+    <string name="status_partial_detail">Sem ler a agenda o app não sabe quem é conhecido, então deixa todas as chamadas passarem.</string>
+
+    <string name="status_inactive">Proteção inativa</string>
+    <string name="status_inactive_detail">O Android ainda não deixou este app filtrar as chamadas.</string>
+
+    <string name="action_request_role">Ativar filtro de chamadas</string>
+    <string name="action_request_contacts">Permitir acesso aos contatos</string>
+    <string name="action_clear_history">Limpar histórico</string>
+
+    <string name="switch_blocking">Bloquear quem não está na agenda</string>
+    <string name="switch_call_log">Esconder bloqueios do registro de chamadas</string>
+
+    <string name="history_title">Chamadas recentes</string>
+    <string name="history_empty">Nenhuma chamada filtrada até agora.</string>
+
+    <string name="entry_blocked">Bloqueada</string>
+    <string name="entry_allowed">Liberada</string>
+    <string name="entry_allowed_named">Liberada · %1$s</string>
+    <string name="number_hidden">Número oculto</string>
+    <string name="log_no_permission">liberada: sem permissão de contatos</string>
+</resources>

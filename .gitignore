@@ -1,0 +1,19 @@
+# Build
+build/
+.gradle/
+local.properties
+
+# Assinatura — NUNCA versionar
+keystore/
+keystore.properties
+*.jks
+*.keystore
+
+# Artefatos
+*.apk
+*.aab
+
+# IDE / SO
+.idea/
+*.iml
+.DS_Store

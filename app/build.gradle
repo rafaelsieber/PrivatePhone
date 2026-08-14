@@ -1,0 +1,58 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Credenciais de assinatura ficam fora do versionamento (ver keystore.properties.example).
+// Sem o arquivo, o build de release sai sem assinatura em vez de quebrar.
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+def hasSigningConfig = keystoreProperties.containsKey("storeFile") &&
+        rootProject.file(keystoreProperties["storeFile"]).exists()
+
+android {
+    namespace 'com.rafael.privatephone'
+    compileSdk 34
+    buildToolsVersion "35.0.0"
+
+    defaultConfig {
+        applicationId "com.rafael.privatephone"
+        minSdk 29
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    signingConfigs {
+        if (hasSigningConfig) {
+            release {
+                storeFile rootProject.file(keystoreProperties["storeFile"])
+                storePassword keystoreProperties["storePassword"]
+                keyAlias keystoreProperties["keyAlias"]
+                keyPassword keystoreProperties["keyPassword"]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (hasSigningConfig) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // App sem dependências externas: apenas o framework do Android.
+    dependenciesInfo {
+        includeInApk false
+        includeInBundle false
+    }
+}
