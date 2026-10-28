@@ -2,7 +2,7 @@
 
 App Android minimalista que **só deixa passar ligações de quem está na sua agenda**. Todo o resto é recusado antes de o telefone tocar — sem toque, sem vibração, sem notificação.
 
-29 KB, zero dependências externas, zero acesso à internet. A única permissão que ele pede é `READ_CONTACTS`.
+Zero dependências externas, zero acesso à internet. Permissões: `READ_CONTACTS` (para saber quem é conhecido), `POST_NOTIFICATIONS` (para avisar se o filtro cair) e `RECEIVE_BOOT_COMPLETED` (para conferir o filtro no boot).
 
 ## Como funciona
 
@@ -15,8 +15,11 @@ Para um número desconhecido a resposta é `setRejectCall(true)` — a chamada �
 ### Decisões de projeto
 
 - **Número oculto/privado é bloqueado.** Não está na agenda, não passa.
-- **Sem permissão de contatos, libera tudo.** É proposital: se a permissão for revogada, o app não tem como saber quem é conhecido. Melhor deixar um desconhecido passar do que bloquear a família inteira por causa de uma permissão que sumiu.
-- **Casamento de números tolerante ao 9º dígito.** Além do `PhoneLookup` do Android, compara os últimos 8 dígitos. Um contato salvo como `9999-8888` casa com `+55 11 99999-8888`.
+- **Sem permissão de contatos, libera tudo — mas avisa.** É proposital: se a permissão for revogada, o app não tem como saber quem é conhecido. Melhor deixar um desconhecido passar do que bloquear a família inteira por causa de uma permissão que sumiu. Nesse caso, e se o app perder o papel de filtro, fica uma notificação persistente "Filtro de chamadas desligado". A checagem roda ao abrir o app, a cada chamada, no boot e uma vez por dia (JobScheduler).
+- **Resposta em milissegundos.** O Android dá uns 5 s para a triagem; passou disso, a chamada toca mesmo que a resposta seja recusar. A agenda fica num índice em memória, carregado quando o processo sobe e relido quando os contatos mudam (`ContentObserver`). Só enquanto a primeira carga não termina a triagem consulta o provedor direto.
+- **Casamento por E.164, tolerante ao 9º dígito.** Compara o número inteiro em E.164 (`NORMALIZED_NUMBER`). De reserva, compara DDD + os 8 últimos dígitos, ignorando o nono dígito: um contato salvo como `(11) 9999-8888` casa com `+55 11 99999-8888`. Contato salvo sem DDD não casa pela reserva.
+- **Exclusão do auto-revoke.** O Android 11+ tira as permissões de apps que ficam meses sem ser abertos — e este, funcionando bem, nunca é aberto. A tela pede a exclusão enquanto ela não estiver dada.
+- **Log.** Cada chamada filtrada vira uma linha no logcat (tag `PrivatePhone`) com a decisão, o motivo e o tempo de resposta em ms.
 - **Nada sai do aparelho.** Preferências e histórico ficam em `SharedPreferences`, em storage device-protected — a triagem pode acontecer antes do primeiro desbloqueio do dia.
 
 ## Instalação
@@ -57,12 +60,15 @@ sdk.dir=/caminho/para/Android/Sdk
 
 ## Código
 
-Quatro arquivos, em `app/src/main/java/com/rafael/privatephone/`:
+Em `app/src/main/java/com/rafael/privatephone/`:
 
 | Arquivo | Papel |
 |---|---|
 | `ContactScreeningService.java` | Decide passa/bloqueia a cada chamada |
-| `Contacts.java` | Procura o número na agenda |
+| `ContactIndex.java` | Índice da agenda em memória, relido por `ContentObserver` |
+| `Contacts.java` | Normalização de números e consulta direta à agenda |
+| `Guard.java`, `GuardJob.java`, `BootReceiver.java` | Notificação de filtro desligado e suas checagens |
+| `App.java` | Começa a carregar a agenda assim que o processo sobe |
 | `Store.java` | Preferências e histórico |
 | `MainActivity.java` | A tela única, montada em código |
 

@@ -3,10 +3,12 @@ package com.rafael.privatephone;
 import android.Manifest;
 import android.app.Activity;
 import android.app.role.RoleManager;
+import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -34,6 +36,7 @@ public class MainActivity extends Activity {
 
     private static final int REQUEST_ROLE = 1;
     private static final int REQUEST_CONTACTS = 2;
+    private static final int REQUEST_NOTIFICATIONS = 3;
 
     private static final int GREEN = 0xFF1B8E3C;
     private static final int RED = 0xFFC62828;
@@ -45,6 +48,7 @@ public class MainActivity extends Activity {
     private TextView statusDetailView;
     private Button roleButton;
     private Button contactsButton;
+    private Button autoRevokeButton;
     private Switch blockingSwitch;
     private Switch callLogSwitch;
     private LinearLayout historyContainer;
@@ -55,6 +59,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         store = new Store(this);
         setContentView(buildUi());
+        requestNotifications();
     }
 
     @Override
@@ -89,6 +94,11 @@ public class MainActivity extends Activity {
         contactsButton.setText(R.string.action_request_contacts);
         contactsButton.setOnClickListener(v -> requestContacts());
         root.addView(contactsButton, buttonParams());
+
+        autoRevokeButton = new Button(this);
+        autoRevokeButton.setText(R.string.action_keep_permissions);
+        autoRevokeButton.setOnClickListener(v -> requestAutoRevokeExemption());
+        root.addView(autoRevokeButton, buttonParams());
 
         root.addView(divider());
 
@@ -144,12 +154,14 @@ public class MainActivity extends Activity {
     // ------------------------------------------------------------------ estado
 
     private void refresh() {
-        boolean roleHeld = isScreeningApp();
+        boolean roleHeld = Guard.isScreeningApp(this);
         boolean contactsGranted = Contacts.hasPermission(this);
+        Guard.check(this);
         boolean enabled = store.isBlockingEnabled();
 
         roleButton.setVisibility(roleHeld ? View.GONE : View.VISIBLE);
         contactsButton.setVisibility(contactsGranted ? View.GONE : View.VISIBLE);
+        autoRevokeButton.setVisibility(isAutoRevokeExempt() ? View.GONE : View.VISIBLE);
 
         blockingSwitch.setChecked(enabled);
         callLogSwitch.setChecked(store.isSkipCallLog());
@@ -211,11 +223,13 @@ public class MainActivity extends Activity {
         }
     }
 
-    private boolean isScreeningApp() {
-        RoleManager roles = getSystemService(RoleManager.class);
-        return roles != null
-                && roles.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)
-                && roles.isRoleHeld(RoleManager.ROLE_CALL_SCREENING);
+    /**
+     * O Android 11+ tira as permissões de apps que ficam meses sem ser abertos — e
+     * este, funcionando bem, nunca é aberto. Sem a exclusão, um dia a agenda some.
+     */
+    private boolean isAutoRevokeExempt() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.R
+                || getPackageManager().isAutoRevokeWhitelisted();
     }
 
     // ------------------------------------------------------------------ ações
@@ -236,6 +250,20 @@ public class MainActivity extends Activity {
         requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, REQUEST_CONTACTS);
     }
 
+    private void requestNotifications() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return;
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) return;
+        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_NOTIFICATIONS);
+    }
+
+    private void requestAutoRevokeExemption() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return;
+        Intent intent = new Intent(Intent.ACTION_AUTO_REVOKE_PERMISSIONS,
+                Uri.fromParts("package", getPackageName(), null));
+        startActivity(intent);
+    }
+
     private void openAppSettings() {
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                 Uri.fromParts("package", getPackageName(), null));
@@ -251,7 +279,10 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
-        if (requestCode == REQUEST_CONTACTS) refresh();
+        if (requestCode == REQUEST_CONTACTS) {
+            ContactIndex.get(this).start();
+            refresh();
+        }
     }
 
     // ------------------------------------------------------------------ helpers

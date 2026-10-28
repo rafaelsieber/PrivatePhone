@@ -16,6 +16,7 @@
 
     <string name="action_request_role">Ativar filtro de chamadas</string>
     <string name="action_request_contacts">Permitir acesso aos contatos</string>
+    <string name="action_keep_permissions">Não deixar o Android tirar as permissões</string>
     <string name="action_clear_history">Limpar histórico</string>
 
     <string name="switch_blocking">Bloquear quem não está na agenda</string>
@@ -29,4 +30,9 @@
     <string name="entry_allowed_named">Liberada · %1$s</string>
     <string name="number_hidden">Número oculto</string>
     <string name="log_no_permission">liberada: sem permissão de contatos</string>
+
+    <string name="notify_channel">Filtro desligado</string>
+    <string name="notify_off_title">Filtro de chamadas desligado</string>
+    <string name="notify_off_no_role">O PrivatePhone perdeu o papel de filtro de chamadas. Todas as ligações estão entrando. Toque para reativar.</string>
+    <string name="notify_off_no_contacts">Sem acesso aos contatos o PrivatePhone deixa todas as ligações entrarem. Toque para liberar.</string>
 </resources>
